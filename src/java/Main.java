@@ -1,3 +1,5 @@
+package java;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -9,8 +11,6 @@ public class Main {
 
         paser.findHeader();
         paser.show();
-
-        System.out.println("-----------------------------------");
 
         ArrayList<FormDataTextFile> files = paser.findFile();
 

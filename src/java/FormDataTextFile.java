@@ -1,3 +1,5 @@
+package java;
+
 public class FormDataTextFile {
     public String formName;
     public String fileName;
