@@ -4,7 +4,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class RequestPaser {
@@ -12,10 +11,10 @@ public class RequestPaser {
 
     private String method;
     private String uri;
-    private String httpVerison;
+    private String httpVersion;
 
     // 인덱스로 값 매핑
-    private Map<String, String> headers;
+    public Map<String, String> headers;
 
     public void create(File file) throws FileNotFoundException {
         if(file.exists()){
@@ -26,7 +25,25 @@ public class RequestPaser {
         System.out.println("** 파일 확인불가 **");
     }
 
-    public void makeMap() throws IOException {
+    public String getMethod() {
+        return method;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public String getHttpVersion() {
+        return httpVersion;
+    }
+
+    public void show() {
+        for(Map.Entry<String, String> entry : headers.entrySet()){
+            System.out.println(entry.getKey() + ": " + entry.getValue());
+        }
+    }
+
+    public void findHeader() throws IOException {
         if(reader == null){
             System.out.println("파일 확인 불가");
             return;
@@ -63,7 +80,7 @@ public class RequestPaser {
                 // HTTP version 추출
                 if(now.length() > enterTarget.length()
                         && now.substring(now.length()-enterTarget.length(),now.length()).equals(enterTarget)){
-                    this.httpVerison = now.substring(0,now.length()-enterTarget.length());
+                    this.httpVersion = now.substring(0,now.length()-enterTarget.length());
                     now="";
                     data=reader.read();
                     lineNum++;
@@ -71,7 +88,6 @@ public class RequestPaser {
             }
 
             if(now.trim().equals(enterTarget.trim())){
-                System.out.println("헤더 추출 끝");
                 return;
             }
             // 줄바꿈
@@ -85,7 +101,7 @@ public class RequestPaser {
             // 헤더 추출
             if(now.length() > headerTarget.length()
                     && now.substring(now.length()-headerTarget.length(),now.length()).equals(headerTarget)){
-                header=now.substring(0,now.length()-headerTarget.length());
+                header=now.substring(0,now.length()-headerTarget.length()).trim();
                 now="";
             }
 
@@ -96,17 +112,83 @@ public class RequestPaser {
 
     }
 
-    public void show() {
-        for(Map.Entry<String, String> entry : headers.entrySet()){
-            System.out.println(entry.getKey() + ": " + entry.getValue());
+    public String getBoundary(){
+        String value = headers.get("Content-Type");
+        String key = "boundary=";
+        return value.substring(value.indexOf(key)+key.length(),value.length());
+    }
+
+
+    public ArrayList<FormDataTextFile> findFile() throws IOException{
+        if (reader == null) {
+            System.out.println("파일 확인 불가");
+            return null;
         }
-    }
 
-    public String getValue(String key) {
-        return headers.get(key);
-    }
+        String HEADER_NAME1 = "Content-Disposition: ";
+        String HEADER_NAME2 = "Content-Type: ";
+        String enterTarget = "[\\r][\\n]";
 
-    public void makeFile(){
+        ArrayList<FormDataTextFile> files = new ArrayList<>();
+        FormDataTextFile file = new FormDataTextFile();
 
+        String[] arr = new String[3];
+        String cType = "";
+        String body = "";
+
+        String boundary = getBoundary();
+        int boundaryCnt = 0;
+
+        int data = 0;
+        String now = "";
+        while ((data = reader.read()) != -1) {
+            if(now.contains(boundary+enterTarget)){  // 파일 시작
+                now = "";
+                boundaryCnt++;
+            }
+            now = now + (char) data;
+
+            if(now.contains(HEADER_NAME1) && now.contains(enterTarget)){
+                String value = now.substring(HEADER_NAME1.length()+2,now.length()-enterTarget.length());
+
+                arr[2] = value.substring(value.lastIndexOf("=")+1);
+                value = value.substring(0,value.lastIndexOf("filename=")).trim();
+
+                arr[1] = value.substring(value.lastIndexOf("=")+1,value.length()-1).trim();
+                value = value.substring(0,value.lastIndexOf("name=")).trim();
+
+                arr[0] = value.substring(0, value.length()-1).trim();
+
+                now = "";
+            }
+            if(now.contains(HEADER_NAME2) && now.contains(enterTarget)){
+                cType = now.substring(HEADER_NAME2.length()+2, now.length() - enterTarget.length());
+                now = "";
+            }
+
+            if(now.contains(enterTarget) && now.length() > enterTarget.length()*2
+                    && !cType.equals("")){
+                String tempNow = now.replaceFirst(enterTarget,"");
+                if(tempNow.contains(enterTarget)){
+                    body = tempNow.replace(enterTarget,"");
+
+                    file.setContentType(cType);
+                    file.setFormName(arr[1]);
+                    file.setFileName(arr[2]);
+                    file.setContentType(arr[0]);
+                    file.setBody(body);
+                    files.add(file);
+
+                    file = new FormDataTextFile();
+                    cType = "";
+                    arr = new String[3];
+
+                    now = "";
+                }
+            }
+        }
+
+        return files;
     }
 }
+
