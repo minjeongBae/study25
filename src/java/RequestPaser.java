@@ -142,7 +142,7 @@ public class RequestPaser {
         int boundaryCnt = 0;
 
         int data = 0;
-        String now = "";
+        String now = ""; // 버퍼
         while ((data = reader.read()) != -1) {
             if(now.contains(boundary+enterTarget)){  // 파일 시작
                 now = "";
