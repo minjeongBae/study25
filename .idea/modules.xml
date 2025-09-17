@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/src/prac01_HTTPMultupartFormData.iml" filepath="$PROJECT_DIR$/src/prac01_HTTPMultupartFormData.iml" />
+      <module fileurl="file://$PROJECT_DIR$/prac01_HTTPMultupartFormData2.iml" filepath="$PROJECT_DIR$/prac01_HTTPMultupartFormData2.iml" />
     </modules>
   </component>
 </project>
