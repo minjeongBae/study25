@@ -11,7 +11,5 @@ public class Main {
         paser.parse("http_prac_data1.txt");
 
         paser.show();
-
-
     }
 }
