@@ -8,6 +8,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RequestPaser {
+
+    final String enterTarget = "[\\r][\\n]" ;
+
+
     private FileReader reader;
 
     private String method;
@@ -17,15 +21,6 @@ public class RequestPaser {
     // 인덱스로 값 매핑
     private Map<String, String> headers;
     private ArrayList<FormDataTextFile> files;
-
-    private void create(File file) throws FileNotFoundException {
-        if(file.exists()){
-            this.reader = new FileReader(file);
-            System.out.println("** 파일 인식 완료 **");
-            return;
-        }
-        System.out.println("** 파일 확인불가 **");
-    }
 
     public String getMethod() {
         return method;
@@ -39,12 +34,18 @@ public class RequestPaser {
         return httpVersion;
     }
 
-    public void show() {
-        for(Map.Entry<String, String> entry : headers.entrySet()){
-            System.out.println(entry.getKey() + ": " + entry.getValue());
+    // parse() 수행 전 필수 수행 !!
+    // 파일 Reader 생성
+    private void create(File file) throws FileNotFoundException {
+        if(file.exists()){
+            this.reader = new FileReader(file);
+            System.out.println("** 파일 인식 완료 **");
+            return;
         }
+        System.out.println("** 파일 확인불가 **");
     }
 
+    // http 헤더와 바디 (파일) 추출
     public void parse(String fileURL) throws IOException {
         create(new File(fileURL));
         if(reader == null){
@@ -56,17 +57,39 @@ public class RequestPaser {
     }
 
 
+    public void show() {
+
+        System.out.println(method + " " + uri + " " + httpVersion);
+
+        for(Map.Entry<String, String> entry : headers.entrySet()){
+            System.out.println(entry.getKey() + ": " + entry.getValue());
+        }
+    }
+
+    private String parseRequestLine(String buffer){
+        // Request line은 띄어쓰기로 구분
+        String divTarget = " " ;
+        if(buffer.contains(divTarget)) {
+            // 띄어쓰기가 포함되어 있으면
+            if(this.method == null || this.method.isEmpty()) {
+                this.method = buffer.substring(0,buffer.length()-divTarget.length());
+                return "";
+            } else if (this.uri == null || this.uri.isEmpty()) {
+                this.uri = buffer.substring(0, buffer.length() - divTarget.length());
+                return "";
+            }
+        } else if (buffer.contains(enterTarget)) {
+            this.httpVersion = buffer.substring(0,buffer.length()-enterTarget.length());
+            return "";
+        }
+        return buffer;
+    }
 
     private void findHeader() throws IOException {
 
         String header = "";
         String value = "";
         headers = new HashMap<>();
-
-        String enterTarget = "[\\r][\\n]" ;
-        String headerTarget = ": " ;
-        String methodTarget = " /" ;
-        String uriTarget = " HTTP" ;
 
         String buffer = "";
         int data = 0;
@@ -75,23 +98,8 @@ public class RequestPaser {
             if('\n'!= (char) data) buffer = buffer + (char) data;
             // Request line
             if(lineNum == 1) {
-                // method 추출
-                if((buffer.length() > methodTarget.length()) && buffer.substring(buffer.length()-methodTarget.length(),buffer.length()).equals(methodTarget)){
-                    this.method = buffer.substring(0,buffer.length()-methodTarget.length());
-                    buffer = "/";
-                }
-
-                // URI 추출
-                if((buffer.length() > uriTarget.length()) && buffer.substring(buffer.length()-uriTarget.length(),buffer.length()).equals(uriTarget)) {
-                    this.uri = buffer.substring(0, buffer.length() - uriTarget.length());
-                    buffer = "HTTP";
-                }
-
-                // HTTP version 추출
-                if(buffer.length() > enterTarget.length()
-                        && buffer.substring(buffer.length()-enterTarget.length(),buffer.length()).equals(enterTarget)){
-                    this.httpVersion = buffer.substring(0,buffer.length()-enterTarget.length());
-                    buffer="";
+                buffer = parseRequestLine(buffer);
+                if(httpVersion!=null && !httpVersion.trim().isEmpty()){
                     data=reader.read();
                     lineNum++;
                 }
@@ -108,6 +116,7 @@ public class RequestPaser {
                 lineNum++;
             }
 
+            String headerTarget = ": " ;
             // 헤더 추출
             if(buffer.length() > headerTarget.length()
                     && buffer.substring(buffer.length()-headerTarget.length(),buffer.length()).equals(headerTarget)){
@@ -115,7 +124,7 @@ public class RequestPaser {
                 buffer="";
             }
 
-            if(!header.equals("") && !value.equals("")){
+            if(!header.isEmpty() && !value.isEmpty()){
                 headers.put(header, value);
             }
         }
@@ -132,7 +141,6 @@ public class RequestPaser {
     private void findFile() throws IOException{
         String HEADER_NAME1 = "Content-Disposition: ";
         String HEADER_NAME2 = "Content-Type: ";
-        String enterTarget = "[\\r][\\n]";
 
         this.files = new ArrayList<>();
         FormDataTextFile file = new FormDataTextFile();
