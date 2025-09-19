@@ -1,22 +1,21 @@
-POST /file/upload HTTP/1.1[\r][\n]
-Content-Length: 344[\r][\n]
-Content-Type: multipart/form-data; boundary=Uee--r1_eDOWu7FpA0LJdLwCMLJQapQGu[\r][\n]
-Host: localhost:8080[\r][\n]
-Connection: Keep-Alive[\r][\n]
-User-Agent: Apache-HttpClient/4.3.4 (java 1.5)[\r][\n]
-Accept-Encoding: gzip,deflate[\r][\n]
-[\r][\n]
---Uee--r1_eDOWu7FpA0LJdLwCMLJQapQGu[\r][\n]
-Content-Disposition: form-data; name=files; filename=test.txt[\r][\n]
-Content-Type: application/octet-stream[\r][\n]
-[\r][\n]
+POST /file/upload HTTP/1.1
+Content-Length: 344
+Content-Type: multipart/form-data; boundary=Uee--r1_eDOWu7FpA0LJdLwCMLJQapQGu
+Host: localhost:8080
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.3.4 (java 1.5)
+Accept-Encoding: gzip,deflate
+
+--Uee--r1_eDOWu7FpA0LJdLwCMLJQapQGu
+Content-Disposition: form-data; name=files; filename=test.txt
+Content-Type: application/octet-stream
+
 aaaa
-[\r][\n]
---Uee--r1_eDOWu7FpA0LJdLwCMLJQapQGu[\r][\n]
-Content-Disposition: form-data; name=files; filename=test1.txt[\r][\n]
-Content-Type: application/octet-stream[\r][\n]
-[\r][\n]
+
+--Uee--r1_eDOWu7FpA0LJdLwCMLJQapQGu
+Content-Disposition: form-data; name=files; filename=test1.txt
+Content-Type: application/octet-stream
+
 1111
-[\r][\n]
---Uee--r1_eDOWu7FpA0LJdLwCMLJQapQGu--[\r][\n]
-[\r][\n]
+
+--Uee--r1_eDOWu7FpA0LJdLwCMLJQapQGu--

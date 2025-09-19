@@ -1,0 +1,6 @@
+GET /index.html?name=ysj&gender=mail HTTP/1.1
+Content-Length: 344
+Host: localhost:80
+Connection: Keep-Alive
+User-Agent: Apache-HttpClient/4.3.4
+Accept-Encoding: gzip,deflate
